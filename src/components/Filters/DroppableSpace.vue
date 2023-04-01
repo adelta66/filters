@@ -14,7 +14,6 @@ export default {
     methods: {
         onDrop(event: DragEvent) {
             let filterName: string = event.dataTransfer?.getData('filterName') as string
-            console.log(filterName, this.index)
             this.store.addInstruction(filterName, this.index as number)
         }
     }

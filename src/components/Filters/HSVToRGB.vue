@@ -14,9 +14,8 @@ export default {
 
 <template>
     <div
-        class="instruction"
+        class="innerInstruction"
         draggable="false"
-        :class="type"
     >
         {{ name }}
     </div>

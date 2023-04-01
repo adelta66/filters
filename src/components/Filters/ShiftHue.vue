@@ -1,12 +1,31 @@
 <script lang="ts">
+import { useFiltersStore } from '@/stores/Filters'
 export default {
+    setup() {
+        const store = useFiltersStore()
+        return {
+            store,
+        }
+    },
+    data() {
+        return {
+            value: 0,
+        }
+    },
     props: {
         name: String,
         computed: Boolean,
         type: String,
+        index: Number,
     },
     computed: {
-
+    },
+    methods: {
+        changeValue(event: Event) {
+            let value = (event.target as HTMLInputElement).value
+            this.store.setAdditionalData((this.index as number), { value: value })
+            this.store.setInstructionsComputed((this.index as number), false)
+        }
     }
 }
 
@@ -14,20 +33,24 @@ export default {
 
 <template>
     <div
-        class="instruction"
+        class="innerInstruction"
         draggable="false"
-        :class="type"
     >
-        {{ name }}
+        {{ name }} {{ value }}
         <input
             type="range"
             name=""
             id=""
-            value="50"
-            min="0"
-            max="100"
+            v-model="value"
+            min="-180"
+            max="180"
+            @input="changeValue($event)"
         >
     </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+input {
+    width: 100%;
+}
+</style>

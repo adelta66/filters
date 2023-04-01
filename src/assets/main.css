@@ -40,10 +40,23 @@ body,
 
 .instruction {
   display: flex;
-  flex-direction: column;
+  margin: auto;
   align-items: center;
   align-content: center;
   width: 80%;
+  min-width: 80%;
+  border: 0px solid;
+  border-radius: 10px;
+  padding: 2px;
+}
+
+.innerInstruction {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-content: center;
   border: 0px solid;
   border-radius: 10px;
 }

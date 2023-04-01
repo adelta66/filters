@@ -1,14 +1,5 @@
 // import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-type imageHSV = Array<Array<number>>
-type imageRGB = Array<Array<number>>
-interface instruction {
-  name: string,
-  key: string,
-  inputColorSpace: string,
-  type: string,
-  computed: boolean,
-}
 
 const makeInstruction = (name: string): instruction | {} => {
   let instruction
@@ -50,29 +41,117 @@ export const useFiltersStore = defineStore('filters', {
   state: () => ({
     width: 0,
     height: 0,
+    computationStart: new Date(),
     allFilters: {
       "shiftHue": {
         name: 'Shift Hue',
         type: 'color',
         inputColorSpace: 'HSV',
-        apply(image: imageHSV) {
-          // do something
+        apply(image: imageHSV, additionalData?: any) {
+          let deg = additionalData.value
+          let shiftValue = deg / 360 * 255
+          return image.map((pixel) => {
+            let hue = pixel[0] + shiftValue
+            if (hue > 255) {
+              hue -= 255
+            } else if (hue < 0) {
+              hue += 255
+            }
+            return [hue, pixel[1], pixel[2], pixel[3]]
+          })
         }
       },
       "RGBtoHSV": {
         name: 'RGB to HSV',
         type: 'colorSpace',
         inputColorSpace: 'RGB',
-        apply(image: imageRGB) {
-          // do something
+        apply(image: imageRGB, additionalData?: any) {
+          const pixelRgbToHsv = (r: number, g: number, b: number, a: number) => {
+            r /= 255
+            g /= 255
+            b /= 255
+
+            let max = Math.max(r, g, b)
+            let min = Math.min(r, g, b)
+            let h, s, v = max
+
+            let d = max - min
+            s = max == 0 ? 0 : d / max
+
+            if (max == min) {
+              h = 0
+            } else {
+              switch (max) {
+                case r:
+                  h = (g - b) / d + (g < b ? 6 : 0)
+                  break
+                case g:
+                  h = (b - r) / d + 2
+                  break
+                case b:
+                  h = (r - g) / d + 4
+                  break
+              }
+              if (h === undefined) h = 0
+              h /= 6
+            }
+            return [h * 255, s * 255, v * 255, a]
+          }
+          let imageHSV = image.map((pixel) => {
+            return pixelRgbToHsv(pixel[0], pixel[1], pixel[2], pixel[3])
+          })
+          return imageHSV
         }
       },
       "HSVtoRGB": {
         name: 'HSV to RGB',
         type: 'colorSpace',
         inputColorSpace: 'HSV',
-        apply(image: imageHSV) {
-          // do something
+        apply(image: imageHSV, additionalData?: any) {
+          const pixelHsvToRgb = (h: number, s: number, v: number, a: number) => {
+            h /= 255
+            s /= 255
+            v /= 255
+            let r, g, b
+
+            let i = Math.floor(h * 6)
+            let f = h * 6 - i
+            let p = v * (1 - s)
+            let q = v * (1 - f * s)
+            let t = v * (1 - (1 - f) * s)
+
+            switch (i % 6) {
+              case 0:
+                r = v, g = t, b = p
+                break
+              case 1:
+                r = q, g = v, b = p
+                break
+              case 2:
+                r = p, g = v, b = t
+                break
+              case 3:
+                r = p, g = q, b = v
+                break
+              case 4:
+                r = t, g = p, b = v
+                break
+              case 5:
+                r = v, g = p, b = q
+                break
+            }
+            if ((r === undefined) || (g === undefined) || (b === undefined)) {
+              r = 0
+              g = 0
+              b = 0
+            }
+            return [r * 255, g * 255, b * 255, a]
+          }
+
+          let imageRGB = image.map((pixel) => {
+            return pixelHsvToRgb(pixel[0], pixel[1], pixel[2], pixel[3])
+          })
+          return imageRGB
         }
       },
     },
@@ -115,8 +194,6 @@ export const useFiltersStore = defineStore('filters', {
 
       this.instructions.splice(index + 1, 0, instruction)
       this.setInstructionsComputed(index + 2, false)
-      console.log(this.instructions)
-
     },
     setInstructionComputed(index: number, computed: boolean) {
       this.instructions[index].computed = computed
@@ -128,18 +205,32 @@ export const useFiltersStore = defineStore('filters', {
     },
     compute(index: number) {
       let instruction = this.instructions[index]
-      let image = (index != 0) ? this.images[this.images.length - 1] : this.baseImage
-      if (instruction.inputColorSpace != image.colorSpace) {
-        //TODO: zmień colorspace
+      let additionalData = instruction.additionalData
+      let image
+      if (index == 0) {
+        image = this.baseImage
+      } else {
+        if (!this.instructions[index - 1].computed) {
+          this.compute(index - 1)
+        }
+        image = this.images[this.images.length - 1]
       }
-      let result = (this.allFilters as any)[instruction.key as string].apply(image)
-      this.images[index + 1] = {
+      this.startTime()
+
+      let result = (this.allFilters as any)[instruction.key as string].apply(image.data, additionalData)
+      this.images[index] = {
         colorSpace: instruction.inputColorSpace,
         data: result
       }
       this.setInstructionComputed(index, true)
+      console.log(index, instruction.name, this.endTime() + "ms")
+
     },
     displayImage(index: number = -1) {
+      console.log(index)
+      console.log(this.images)
+
+
       let canvas: HTMLCanvasElement = document.querySelector('#displayCanvas') as HTMLCanvasElement
       let ctx = canvas.getContext('2d')
 
@@ -156,7 +247,16 @@ export const useFiltersStore = defineStore('filters', {
 
       ctx?.putImageData(new ImageData(imageUint8, this.width, this.height), 0, 0)
 
+    },
+    setAdditionalData(index: number, data: any) {
+      this.instructions[index].additionalData = data
+    },
+    startTime() {
+      this.computationStart = new Date()
+    },
+    endTime() {
+      let computationEnd = new Date()
+      return computationEnd.getTime() - this.computationStart.getTime()
     }
-
   },
 })
