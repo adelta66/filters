@@ -1,13 +1,29 @@
 {
   "extends": "@vue/tsconfig/tsconfig.web.json",
-  "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
+  "include": [
+    "env.d.ts",
+    "src/**/*",
+    "src/**/*.vue"
+  ],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
-    }
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "target": "es6",
+    "lib": [
+      "es2019",
+      "DOM",
+      "ES6",
+      "DOM.Iterable",
+      "ScriptHost"
+    ]
+    // "lib": [
+    //   "esnext"
+    // ]
   },
-
   "references": [
     {
       "path": "./tsconfig.node.json"

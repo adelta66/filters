@@ -1,35 +1,70 @@
 @import './base.css';
 
+html,
+body,
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  display: block;
+  overflow: hidden;
+}
 
+#app {
+  margin: 0 auto;
+  padding: 0;
   font-weight: normal;
 }
 
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
+.instructionsContainer {
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-content: center;
+  flex-grow: 0;
+  min-height: 100%;
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
+.instructionContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-content: center;
+  /* margin: 5px; */
+  width: 100%
+    /* overflow: scroll; */
+    /* overflow-y: scroll; */
 }
 
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
+.instruction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-content: center;
+  width: 80%;
+  border: 0px solid;
+  border-radius: 10px;
+}
 
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
+.droppableSpace {
+  /* background-color: var(--droppableSpace); */
+  height: 20px;
+}
+
+.colorSpace {
+  background-color: var(--colorSpace);
+
+  margin: 0;
+}
+
+.color {
+  background-color: var(--color);
+  margin: 0;
+}
+
+canvas {
+  max-height: 100%;
+  max-width: 100%;
 }
