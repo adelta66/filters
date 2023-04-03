@@ -72,6 +72,11 @@ body,
   margin: 0;
 }
 
+.sort {
+  background-color: var(--sort);
+  margin: 0;
+}
+
 .color {
   background-color: var(--color);
   margin: 0;

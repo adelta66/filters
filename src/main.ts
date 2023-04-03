@@ -18,8 +18,7 @@ declare global {
         computed: boolean,
         additionalData?: any,
     }
-    type imageHSV = Array<Array<number>>
-    type imageRGB = Array<Array<number>>
+    type image = Uint8ClampedArray
 }
 
 app.use(createPinia())

@@ -8,11 +8,11 @@ export default {
             store,
         }
     },
-    data() {
-        return {
-            value: 0,
-        }
-    },
+    // data() {
+    //     return {
+    //         value: 0,
+    //     }
+    // },
     props: {
         name: String,
         computed: Boolean,
@@ -37,16 +37,8 @@ export default {
         class="innerInstruction"
         draggable="false"
     >
-        {{ name }} {{ value }}
-        <input
-            type="range"
-            name=""
-            id=""
-            v-model="value"
-            min="-180"
-            max="180"
-            @input="changeValue($event)"
-        >
+        {{ name }}
+
     </div>
 </template>
 

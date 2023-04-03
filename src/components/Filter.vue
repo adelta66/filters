@@ -2,6 +2,7 @@
 import HSVToRGB from './Filters/HSVToRGB.vue'
 import RGBToHSV from './Filters/RGBToHSV.vue'
 import ShiftHue from './Filters/ShiftHue.vue'
+import Sort from './Filters/Sort.vue'
 
 import { useFiltersStore } from '@/stores/Filters'
 import { storeToRefs } from 'pinia'
@@ -31,15 +32,24 @@ export default {
     methods: {
         compute() {
             this.store.compute(this.index)
+            this.store.displayImage(this.index)
         },
         display() {
             this.store.displayImage(this.index)
+        },
+        reCompute() {
+            this.store.setInstructionsComputed(this.index, false)
+            this.store.compute(this.index)
         }
     },
     components: {
         HSVToRGB,
         RGBToHSV,
         ShiftHue,
+        Sort,
+    },
+    mounted() {
+        console.log(this.instruction)
     }
 }
 
@@ -72,15 +82,27 @@ export default {
             :computed="instruction.computed"
             :type="instruction.type"
         ></ShiftHue>
+        <Sort
+            v-else-if="instruction.name === 'Sort'"
+            :index="index"
+            :name="instruction.name"
+            :computed="instruction.computed"
+            :type="instruction.type"
+        ></Sort>
 
         <button
             v-if="instruction.computed"
             @click="display"
         >&#x1F441;</button>
         <button
+            v-if="instruction.computed"
+            @click="reCompute"
+        >&#8634;</button>
+        <button
             v-else
             @click="compute"
         > &#x2699;</button>
+
     </div>
 </template>
 
