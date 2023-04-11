@@ -1,6 +1,10 @@
 <script setup lang="ts">
+import { computed } from '@vue/reactivity'
 import Filters from '../components/Filters.vue'
 import Instructions from '../components/Instructions.vue'
+import RightPanel from '../components/RightPanel.vue'
+
+
 </script>
 
 <template>
@@ -9,11 +13,7 @@ import Instructions from '../components/Instructions.vue'
       <Filters></Filters>
       <Instructions></Instructions>
     </div>
-    <div class="right">
-      <canvas id="displayCanvas">
-
-      </canvas>
-    </div>
+    <RightPanel></RightPanel>
   </div>
 </template>
 
