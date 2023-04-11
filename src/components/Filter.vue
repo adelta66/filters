@@ -3,6 +3,8 @@ import HSVToRGB from './Filters/HSVToRGB.vue'
 import RGBToHSV from './Filters/RGBToHSV.vue'
 import ShiftHue from './Filters/ShiftHue.vue'
 import Sort from './Filters/Sort.vue'
+import BayerDithering from './Filters/BayerDithering.vue'
+import Grayscale from './Filters/Grayscale.vue'
 
 import { useFiltersStore } from '@/stores/Filters'
 import { storeToRefs } from 'pinia'
@@ -47,6 +49,8 @@ export default {
         RGBToHSV,
         ShiftHue,
         Sort,
+        BayerDithering,
+        Grayscale,
     },
     mounted() {
         console.log(this.instruction)
@@ -89,6 +93,24 @@ export default {
             :computed="instruction.computed"
             :type="instruction.type"
         ></Sort>
+        <BayerDithering
+            v-else-if="instruction.name === 'Bayer Dithering'"
+            :index="index"
+            :name="instruction.name"
+            :computed="instruction.computed"
+            :type="instruction.type"
+        ></BayerDithering>
+        <Grayscale
+            v-else-if="instruction.name === 'Grayscale'"
+            :index="index"
+            :name="instruction.name"
+            :computed="instruction.computed"
+            :type="instruction.type"
+        >
+        </Grayscale>
+        <div v-else>
+            {{ instruction.name }} WAS NOT FOUND
+        </div>
 
         <button
             v-if="instruction.computed"

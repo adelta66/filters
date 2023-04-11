@@ -41,8 +41,28 @@ const makeInstruction = (name: string): instruction | {} => {
         computed: false,
       }
       break
+    case "Bayer Dithering":
+      instruction = {
+        name: 'Bayer Dithering',
+        key: 'bayerDithering',
+        inputColorSpace: 'RGB',
+        type: 'dithering',
+        computed: false,
+      }
+      break
+    case "Grayscale":
+      instruction = {
+        name: 'Grayscale',
+        key: 'grayscale',
+        inputColorSpace: 'RGB',
+        type: 'colorSpace',
+        computed: false,
+      }
+      break
     default:
-      instruction = {}
+      instruction = {
+        error: `"${name}" is not a valid filter name`
+      }
       break
   }
   return instruction
@@ -52,7 +72,6 @@ export const useFiltersStore = defineStore('filters', {
     width: 0,
     height: 0,
     computationStart: new Date(),
-    workerPool: [] as Array<Worker>,
     allFilters: {
       "sort": {
         name: 'Sort',
@@ -226,6 +245,59 @@ export const useFiltersStore = defineStore('filters', {
           return imageRGB
         }
       },
+      "bayerDithering": {
+        name: 'Bayer Dithering',
+        type: 'dithering',
+        inputColorSpace: 'RGB',
+        apply(image: image, additionalData?: any) {
+
+          const bayerMatrices: any = {
+            2: [[0, 127], [191, 63]],
+            3: [[0, 127, 31, 159], [191, 63, 223, 95], [47, 175, 15, 143], [239, 111, 207, 79]]
+          } as const
+          const n = additionalData?.bayer === undefined ? 0 : parseInt(additionalData.bayer)
+          const flipBias = additionalData?.bayerBias === undefined ? false : additionalData.bayerBias
+
+          const bayerSize = Math.pow(2, n + 1)
+          const width = additionalData.width
+          const height = additionalData.height
+
+          const bayerMatrix = bayerMatrices[n + 2]
+          console.log(flipBias, "flipBias")
+          let newImage = image.map((e, i) => {
+            if (i % 4 === 3) return e
+
+            let x = Math.floor(i / 4) % width
+            let y = Math.floor(Math.floor(i / 4) / width)
+            let bayerValue = bayerMatrix[y % bayerSize][x % bayerSize]
+
+            if (flipBias) return (e > (255 - bayerValue)) ? 255 : 0
+            return e > bayerValue ? 255 : 0
+          })
+          return newImage
+
+        }
+      },
+      "grayscale": {
+        name: 'Grayscale',
+        type: 'colorSpace',
+        inputColorSpace: 'RGB',
+        apply(image: image, additionalData?: any) {
+          // the weights are from YUV color space
+          const redWeight = 0.299
+          const greenWeight = 0.587
+          const blueWeight = 0.114
+          let newImage = new Uint8ClampedArray(image.length)
+          for (let i = 0; i < image.length; i += 4) {
+            let gray = image[i] * redWeight + image[i + 1] * greenWeight + image[i + 2] * blueWeight
+            newImage[i] = gray
+            newImage[i + 1] = gray
+            newImage[i + 2] = gray
+            newImage[i + 3] = image[i + 3]
+          }
+          return newImage
+        }
+      }
     },
     instructions: [] as Array<instruction>,
     images: [] as Array<image>,
@@ -249,8 +321,8 @@ export const useFiltersStore = defineStore('filters', {
         ctx.drawImage(img, 0, 0)
         let image = ctx.getImageData(0, 0, img.width, img.height).data
         this.baseImage = image
-
-        this.setInstructionsComputed(this.instructions.length, false)
+        this.images = []
+        this.setInstructionsComputed(0, false)
       }
 
     },
@@ -273,6 +345,7 @@ export const useFiltersStore = defineStore('filters', {
       let additionalData = instruction.additionalData == undefined ? {} : instruction.additionalData
       additionalData.width = this.width
       additionalData.height = this.height
+      2
 
       let image
       if (index == 0) {
@@ -309,7 +382,9 @@ export const useFiltersStore = defineStore('filters', {
       ctx?.putImageData(new ImageData(image, this.width, this.height), 0, 0)
     },
     setAdditionalData(index: number, data: any) {
-      this.instructions[index].additionalData = data
+      if (this.instructions[index].additionalData == undefined) this.instructions[index].additionalData = {}
+      Object.assign(this.instructions[index].additionalData, data)
+      // this.instructions[index].additionalData = data
     },
     startTime() {
       this.computationStart = new Date()

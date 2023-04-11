@@ -77,6 +77,11 @@ body,
   margin: 0;
 }
 
+.dithering {
+  background-color: var(--dithering);
+  margin: 0;
+}
+
 .color {
   background-color: var(--color);
   margin: 0;
