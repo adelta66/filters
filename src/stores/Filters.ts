@@ -59,12 +59,27 @@ const makeInstruction = (name: string): instruction | {} => {
         computed: false,
       }
       break
+    case "Color Palette":
+      instruction = {
+        name: 'Color Palette',
+        key: 'colorPalette',
+        inputColorSpace: 'RGB',
+        type: 'color',
+        computed: false,
+      }
+      break
     default:
       instruction = {
         error: `"${name}" is not a valid filter name`
       }
       break
   }
+  Object.assign(instruction, {
+    additionalData: {
+      colors: [],
+
+    }
+  })
   return instruction
 }
 export const useFiltersStore = defineStore('filters', {
@@ -297,6 +312,44 @@ export const useFiltersStore = defineStore('filters', {
           }
           return newImage
         }
+      },
+      "colorPalette": {
+        name: 'Color Palette',
+        type: 'colorSpace',
+        inputColorSpace: 'RGB',
+        apply(image: image, additionalData?: any) {
+          interface color {
+            r: number,
+            g: number,
+            b: number
+          }
+          console.log(additionalData)
+
+          let newImage = new Uint8ClampedArray(image)
+          let palette: Array<color> = additionalData.colors.map((color: string) => {
+            return {
+              r: parseInt(color.slice(1, 3), 16),
+              g: parseInt(color.slice(3, 5), 16),
+              b: parseInt(color.slice(5, 7), 16)
+            }
+          })
+
+          for (let i = 0; i < image.length; i += 4) {
+            let minDistance = 255 * 255 * 3
+            let minColor = palette[0]
+            palette.forEach(color => {
+              let distance = Math.pow(image[i] - color.r, 2) + Math.pow(image[i + 1] - color.g, 2) + Math.pow(image[i + 2] - color.b, 2)
+              if (distance < minDistance) {
+                minDistance = distance
+                minColor = color
+              }
+            })
+            newImage[i] = minColor.r
+            newImage[i + 1] = minColor.g
+            newImage[i + 2] = minColor.b
+          }
+          return newImage
+        }
       }
     },
     instructions: [] as Array<instruction>,
@@ -385,6 +438,12 @@ export const useFiltersStore = defineStore('filters', {
       if (this.instructions[index].additionalData == undefined) this.instructions[index].additionalData = {}
       Object.assign(this.instructions[index].additionalData, data)
       // this.instructions[index].additionalData = data
+    },
+    setColor(instructionIndex: number, index: number, color: string) {
+      // console.log(this.instructions[instructionIndex].additionalData.colors)
+
+      this.instructions[instructionIndex].additionalData.colors[index] = color
+
     },
     startTime() {
       this.computationStart = new Date()

@@ -5,6 +5,7 @@ import ShiftHue from './Filters/ShiftHue.vue'
 import Sort from './Filters/Sort.vue'
 import BayerDithering from './Filters/BayerDithering.vue'
 import Grayscale from './Filters/Grayscale.vue'
+import ColorPalette from './Filters/ColorPalette.vue'
 
 import { useFiltersStore } from '@/stores/Filters'
 import { storeToRefs } from 'pinia'
@@ -42,6 +43,7 @@ export default {
         reCompute() {
             this.store.setInstructionsComputed(this.index, false)
             this.store.compute(this.index)
+            this.store.displayImage(this.index)
         }
     },
     components: {
@@ -51,9 +53,10 @@ export default {
         Sort,
         BayerDithering,
         Grayscale,
+        ColorPalette,
     },
     mounted() {
-        console.log(this.instruction)
+        // console.log(this.instruction)
     }
 }
 
@@ -108,12 +111,21 @@ export default {
             :type="instruction.type"
         >
         </Grayscale>
+        <ColorPalette
+            v-else-if="instruction.name === 'Color Palette'"
+            :index="index"
+            :name="instruction.name"
+            :computed="instruction.computed"
+            :type="instruction.type"
+        ></ColorPalette>
+
+
         <div v-else>
             {{ instruction.name }} WAS NOT FOUND
         </div>
 
         <button
-            v-if="instruction.computed"
+            :style="{ 'visibility': !instruction.computed ? 'hidden' : 'inherit' }"
             @click="display"
         >&#x1F441;</button>
         <button
